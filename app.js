@@ -3,6 +3,8 @@ const db = require('./db');
 
 const dotenv = require('dotenv');
 
+let { isCelebrateError } = require('celebrate');
+
 let cors = require('cors');
 
 let app = express();
@@ -62,6 +64,21 @@ app.use('/api/v1/location', locationRoute);
 
 app.use('/api/v1/', adminRoute);
 app.use('/api/v1/payment', paymentRoute);
+
+
+app.use((error, _, res, next) => {
+  console.log(error, 'error');
+  if (isCelebrateError(error)) {
+    const errorMessage =
+      error.details.get('body') ||
+      error.details.get('query') ||
+      error.details.get('params');
+    const message = errorMessage?.message?.replace(/"/g, '');
+    res.status(422).json({ errMsg: message });
+  }
+  next();
+});
+
 
 app.get('*', (req, res) => {
   res.send({ status: 404, message: `Page ${req.path} not found` });

@@ -1,6 +1,7 @@
 const { Op, QueryTypes } = require('sequelize');
 let { Product, Upload, sequelize, Review } = require('./model');
 const cloudinary = require('../../middlewares/cloudImage');
+let deleteFileAfterDelay = require('../../middlewares/deleteFileUpload');
 
 // let { QueryTypes } = require('sequelize');
 
@@ -461,6 +462,19 @@ class Services {
 
         let image = result.url;
 
+        // Delete file inside the public folder
+        let filePath = data.path;
+        let delayMs = 3000;
+
+        // Delete file inside the public folder
+        deleteFileAfterDelay(filePath, delayMs, (err) => {
+          if (err) {
+            console.error('Error occurred during file deletion:', err);
+          } else {
+            console.log('File deletion scheduled successfully.');
+          }
+        });
+
         // ----- send data to db ----- //
         let addProduct = await Product.create(
           {
@@ -541,7 +555,6 @@ class Services {
   }
 
   async updateAllProductDetails(data) {
-    console.log(data);
     try {
       let getOne = await Product.findOne({
         where: { id: data.id },

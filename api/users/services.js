@@ -340,6 +340,12 @@ class Services {
   //// ---- To work on this later for address Update ----////
   async updateMe(data) {
     try {
+      let getUser = await User.findOne({ id: data.id });
+
+      if (!getUser) {
+        return { status: 404, message: 'User not found' };
+      }
+
       let UpdateUser = await User.update(
         {
           firstName: data.firstName,

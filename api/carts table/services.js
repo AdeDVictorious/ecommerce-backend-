@@ -139,7 +139,6 @@ class Services {
   }
 
   async substract_cartQty(data) {
-    console.log(data);
     try {
       // Check if product quantity is not = 0
       let getProd = await Product.findOne({

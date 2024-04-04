@@ -183,7 +183,6 @@ class Services {
   }
 
   async getSuccessStatus(data) {
-    console.log(data);
     try {
       let { page } = data;
       let size = 10;
@@ -212,7 +211,6 @@ class Services {
   }
 
   async getFailedStatus(data) {
-    console.log(data);
     try {
       let { page } = data;
       let size = 10;

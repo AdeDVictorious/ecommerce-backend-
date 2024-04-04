@@ -1,4 +1,5 @@
 const express = require('express');
+let orderValidation = require('./validation');
 const authUser = require('../../middlewares/authUser');
 const authAdmin = require('../../middlewares/authAdmin');
 let crypto = require('crypto');
@@ -9,6 +10,8 @@ let Services = require('./services');
 
 orderRoute = express.Router();
 paystackhook = express.Router();
+
+let validation = new orderValidation();
 
 // ///// ----- Example 1 ----- /////
 // ///// ----- Users Route ----- /////
@@ -21,12 +24,17 @@ paystackhook = express.Router();
 
 ///// ----- Example 2 ----- /////
 // ///// ----- Users Route ----- /////
-orderRoute.post('/add_Order', authUser, async (req, res) => {
-  let data = { ...req.userInfo, ...req.body };
-  let service = new Services();
-  let resp = await service.add_Order(data);
-  res.status(resp.status).json(resp);
-});
+orderRoute.post(
+  '/add_Order',
+  validation.validateOrder(),
+  authUser,
+  async (req, res) => {
+    let data = { ...req.userInfo, ...req.body };
+    let service = new Services();
+    let resp = await service.add_Order(data);
+    res.status(resp.status).json(resp);
+  }
+);
 
 orderRoute.get('/getOrder', authUser, async (req, res) => {
   let data = { ...req.userInfo };
@@ -35,13 +43,18 @@ orderRoute.get('/getOrder', authUser, async (req, res) => {
   res.status(resp.status).json(resp);
 });
 
-orderRoute.get('/getOrder/:id', authUser, async (req, res) => {
-  let data = { ...req.userInfo };
-  let data1 = { ...req.params };
-  let service = new Services();
-  let resp = await service.getOrderByID(data, data1);
-  res.status(resp.status).json(resp);
-});
+orderRoute.get(
+  '/getOrder/:id',
+  validation.validateParams(),
+  authUser,
+  async (req, res) => {
+    let data = { ...req.userInfo };
+    let data1 = { ...req.params };
+    let service = new Services();
+    let resp = await service.getOrderByID(data, data1);
+    res.status(resp.status).json(resp);
+  }
+);
 
 orderRoute.get('/getAllOrders', authUser, async (req, res) => {
   let data = { ...req.query, ...req.userInfo };
@@ -126,60 +139,90 @@ paystackhook.post('/paystack_hook', async (req, res) => {
   // res.status(resp).json(resp);
 });
 
-orderRoute.get('/paystack_verify/:id', authUser, async (req, res) => {
-  let data = { ...req.params };
-  let data1 = { ...req.userInfo };
-  let service = new Services();
-  let resp = await service.verifyPayment(data, data1);
-  res.status(resp.status).json(resp);
-});
+orderRoute.get(
+  '/paystack_verify/:id',
+  validation.validateParams(),
+  authUser,
+  async (req, res) => {
+    let data = { ...req.params };
+    let data1 = { ...req.userInfo };
+    let service = new Services();
+    let resp = await service.verifyPayment(data, data1);
+    res.status(resp.status).json(resp);
+  }
+);
 
 ///// ----- Admin Route ---- /////
 
 //// --- PAYSTACK SECTION ----- /////
-orderRoute.get('/paystack_verify/:id', authAdmin, async (req, res) => {
-  let data = { ...req.params };
-  let data1 = { ...req.userInfo };
-  let service = new Services();
-  let resp = await service.verifyPaymentByID(data, data1);
-  res.status(resp.status).json(resp);
-});
+orderRoute.get(
+  '/paystack_verify/:id',
+  validation.validateParams(),
+  authAdmin,
+  async (req, res) => {
+    let data = { ...req.params };
+    let data1 = { ...req.userInfo };
+    let service = new Services();
+    let resp = await service.verifyPaymentByID(data, data1);
+    res.status(resp.status).json(resp);
+  }
+);
 
-orderRoute.get('/paystack_verify_payment/:id', authAdmin, async (req, res) => {
-  let data = { ...req.params };
-  let service = new Services();
-  let resp = await service.verify_Payment(data);
-  res.status(resp.status).json(resp);
-});
+orderRoute.get(
+  '/paystack_verify_payment/:id',
+  validation.validatePaystackParams(),
+  authAdmin,
+  async (req, res) => {
+    let data = { ...req.params };
+    let service = new Services();
+    let resp = await service.verify_Payment(data);
+    res.status(resp.status).json(resp);
+  }
+);
 
 orderRoute.get('/AllPaystack_payment', authAdmin, async (req, res) => {
-  // let data = { ...req.params };
   let service = new Services();
   let resp = await service.AllPaystackPyt();
   res.status(resp.status).json(resp);
 });
 
 ///// This Route is to update the payment status to success/failed by the Admin using the OrderId /////
-orderRoute.patch('/updateOrder/:id', authAdmin, async (req, res) => {
-  let data = { ...req.params, ...req.body };
-  let service = new Services();
-  let resp = await service.updateOrder(data);
-  res.status(resp.status).json(resp);
-});
+orderRoute.patch(
+  '/updateOrder/:id',
+  validation.validateParams(),
+  validation.validateUpdate(),
+  authAdmin,
+  async (req, res) => {
+    let data = { ...req.params, ...req.body };
+    let service = new Services();
+    let resp = await service.updateOrder(data);
+    res.status(resp.status).json(resp);
+  }
+);
 
-orderRoute.get('/selectAll', authAdmin, async (req, res) => {
-  let data = { ...req.query };
-  let service = new Services();
-  let resp = await service.selectAll(data);
-  res.status(resp.status).json(resp);
-});
+orderRoute.get(
+  '/selectAll',
+  validation.validateQuery(),
+  authAdmin,
+  async (req, res) => {
+    let data = { ...req.query };
+    let service = new Services();
+    let resp = await service.selectAll(data);
+    res.status(resp.status).json(resp);
+  }
+);
 
 ///// ----- Use this route carefully ---- ////
-orderRoute.delete('/deleteOrder/:id', authAdmin, async (req, res) => {
-  let data = { ...req.params };
-  let service = new Services();
-  let resp = await service.deleteOrder(data);
-  res.status(resp.status).json(resp);
-});
+orderRoute.delete(
+  '/deleteOrder/:id',
+  validation.validateParams(),
+  authAdmin,
+  async (req, res) => {
+    let data = { ...req.params };
+    let service = new Services();
+    let resp = await service.deleteOrder(data);
+    res.status(resp.status).json(resp);
+  }
+);
 
 module.exports = { orderRoute, paystackhook };
